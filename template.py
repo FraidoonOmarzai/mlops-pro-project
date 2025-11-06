@@ -48,6 +48,8 @@ files = [
     os.path.join("configs", "config.yaml"),
     os.path.join("configs", "model_config.yaml"),
     os.path.join("tests", "__init__.py"),
+    os.path.join("src", "logger.py"),
+    os.path.join("src", "exception.py"),
 ]
 
 for file_ in files:

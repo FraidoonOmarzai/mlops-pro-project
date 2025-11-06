@@ -1,0 +1,41 @@
+# Main Configuration File
+
+# Paths
+artifacts_root: artifacts
+data_root: data
+
+data_ingestion:
+  raw_data_path: data/raw/churn_data.csv
+  train_data_path: data/processed/train.csv
+  test_data_path: data/processed/test.csv
+  test_size: 0.2
+  random_state: 42
+  
+data_validation:
+  schema_path: config/schema.yaml
+  report_path: artifacts/validation_report.json
+
+data_preprocessing:
+  preprocessor_path: artifacts/preprocessors/preprocessor.pkl
+  numerical_features:
+    - tenure
+    - MonthlyCharges
+    - TotalCharges
+  categorical_features:
+    - gender
+    - SeniorCitizen
+    - Partner
+    - Dependents
+    - PhoneService
+    - MultipleLines
+    - InternetService
+    - OnlineSecurity
+    - OnlineBackup
+    - DeviceProtection
+    - TechSupport
+    - StreamingTV
+    - StreamingMovies
+    - Contract
+    - PaperlessBilling
+    - PaymentMethod
+  target_column: Churn

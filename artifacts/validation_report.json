@@ -1,0 +1,91 @@
+{
+    "train_data": {
+        "shape": [
+            5634,
+            21
+        ],
+        "schema_validation": {
+            "all_columns_present": true,
+            "missing_columns": [],
+            "extra_columns": [],
+            "numerical_dtypes_correct": true,
+            "numerical_dtype_details": {
+                "tenure": true,
+                "MonthlyCharges": true
+            }
+        },
+        "quality_validation": {
+            "missing_values": {},
+            "total_missing": 0,
+            "missing_percentage": 0.0,
+            "duplicate_rows": 0,
+            "duplicate_percentage": 0.0,
+            "numerical_statistics": {
+                "tenure": {
+                    "min": 0.0,
+                    "max": 72.0,
+                    "mean": 32.48509052183174,
+                    "std": 24.56874351182127,
+                    "negative_values": 0
+                },
+                "MonthlyCharges": {
+                    "min": 18.4,
+                    "max": 118.75,
+                    "mean": 64.92996095136671,
+                    "std": 30.138105357938493,
+                    "negative_values": 0
+                }
+            },
+            "target_distribution": {
+                "No": 4139,
+                "Yes": 1495
+            },
+            "target_balance_ratio": 0.36
+        }
+    },
+    "test_data": {
+        "shape": [
+            1409,
+            21
+        ],
+        "schema_validation": {
+            "all_columns_present": true,
+            "missing_columns": [],
+            "extra_columns": [],
+            "numerical_dtypes_correct": true,
+            "numerical_dtype_details": {
+                "tenure": true,
+                "MonthlyCharges": true
+            }
+        },
+        "quality_validation": {
+            "missing_values": {},
+            "total_missing": 0,
+            "missing_percentage": 0.0,
+            "duplicate_rows": 0,
+            "duplicate_percentage": 0.0,
+            "numerical_statistics": {
+                "tenure": {
+                    "min": 0.0,
+                    "max": 72.0,
+                    "mean": 31.91554293825408,
+                    "std": 24.525829230398582,
+                    "negative_values": 0
+                },
+                "MonthlyCharges": {
+                    "min": 18.25,
+                    "max": 116.8,
+                    "mean": 64.0888573456352,
+                    "std": 29.89829024000871,
+                    "negative_values": 0
+                }
+            },
+            "target_distribution": {
+                "No": 1035,
+                "Yes": 374
+            },
+            "target_balance_ratio": 0.36
+        }
+    },
+    "validation_passed": true
+}
