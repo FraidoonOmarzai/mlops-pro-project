@@ -1,0 +1,6 @@
+artifact_location: file:///c:/Users/44787/Desktop/mlops-pro-project/mlruns/823262042616604483
+creation_time: 1762538123224
+experiment_id: '823262042616604483'
+last_update_time: 1762538123224
+lifecycle_stage: active
+name: churn_prediction

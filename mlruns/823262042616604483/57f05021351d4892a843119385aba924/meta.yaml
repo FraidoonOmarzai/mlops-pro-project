@@ -1,0 +1,15 @@
+artifact_uri: file:///c:/Users/44787/Desktop/mlops-pro-project/mlruns/823262042616604483/57f05021351d4892a843119385aba924/artifacts
+end_time: 1762538342681
+entry_point_name: ''
+experiment_id: '823262042616604483'
+lifecycle_stage: active
+run_id: 57f05021351d4892a843119385aba924
+run_name: xgboost_run
+run_uuid: 57f05021351d4892a843119385aba924
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762538337466
+status: 3
+tags: []
+user_id: '44787'

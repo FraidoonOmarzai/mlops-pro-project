@@ -10,7 +10,7 @@ data_ingestion:
   test_data_path: data/processed/test.csv
   test_size: 0.2
   random_state: 42
-  
+
 data_validation:
   schema_path: config/schema.yaml
   report_path: artifacts/validation_report.json
@@ -39,3 +39,23 @@ data_preprocessing:
     - PaperlessBilling
     - PaymentMethod
   target_column: Churn
+
+model_training:
+  models_dir: artifacts/models
+  models:
+    - logistic_regression
+    - random_forest
+    - xgboost
+    - lightgbm
+
+mlflow:
+  tracking_uri: mlruns
+  experiment_name: churn_prediction
+  run_name_prefix: run
+
+model_evaluation:
+  metrics_path: artifacts/metrics
+  threshold: 0.5
+  min_f1_score: 0.75
+  min_roc_auc: 0.85
+

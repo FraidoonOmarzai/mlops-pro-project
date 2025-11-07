@@ -7,6 +7,7 @@ from box import ConfigBox
 from pathlib import Path
 from typing import Any
 import json
+import pickle
 
 
 @ensure_annotations
@@ -46,3 +47,22 @@ def save_json(path: Path, data: dict):
         json.dump(data, f, indent=4)
 
     logger.info(f"json file saved at: {path}")
+
+
+@ensure_annotations
+def save_object(file_path: str, obj):
+    """
+    Save any Python object to a file using pickle.
+
+    Args:
+        file_path (str): Path to the file where the object should be saved.
+        obj: Python object to pickle.
+    """
+    # Create directory if it doesn't exist
+    dir_path = os.path.dirname(file_path)
+    if dir_path != "":
+        os.makedirs(dir_path, exist_ok=True)
+
+    # Save object
+    with open(file_path, 'wb') as file_obj:
+        pickle.dump(obj, file_obj)

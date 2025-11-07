@@ -378,7 +378,7 @@ This project is for educational purposes.
 
 ## 👥 Authors
 
-Your Name - MLOps Engineer
+Fraidoon Omarzai - MLOps Engineer
 
 ## 🙏 Acknowledgments
 

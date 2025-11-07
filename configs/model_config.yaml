@@ -1,0 +1,58 @@
+# Model Hyperparameters Configuration
+# This file contains hyperparameters for all ML models used in the project
+
+# Logistic Regression - Baseline Model
+logistic_regression:
+  C: 1.0                      # Inverse of regularization strength
+  max_iter: 1000              # Maximum number of iterations
+  random_state: 42            # Random seed for reproducibility
+  class_weight: balanced      # Handle class imbalance
+  solver: lbfgs               # Optimization algorithm
+  penalty: l2                 # Regularization type
+
+# Random Forest - Ensemble Model
+random_forest:
+  n_estimators: 100           # Number of trees in the forest
+  max_depth: 10               # Maximum depth of trees
+  min_samples_split: 5        # Minimum samples required to split node
+  min_samples_leaf: 2         # Minimum samples required at leaf node
+  max_features: sqrt          # Number of features for best split
+  random_state: 42            # Random seed for reproducibility
+  class_weight: balanced      # Handle class imbalance
+  n_jobs: -1                  # Use all CPU cores
+  bootstrap: true             # Use bootstrap samples
+  oob_score: false            # Out-of-bag score estimation
+
+# XGBoost - Gradient Boosting Model
+xgboost:
+  n_estimators: 100           # Number of boosting rounds
+  max_depth: 6                # Maximum tree depth
+  learning_rate: 0.1          # Step size shrinkage (eta)
+  subsample: 0.8              # Subsample ratio of training instances
+  colsample_bytree: 0.8       # Subsample ratio of columns
+  random_state: 42            # Random seed for reproducibility
+  scale_pos_weight: 1         # Balancing of positive/negative weights
+  eval_metric: logloss        # Evaluation metric
+  objective: binary:logistic  # Learning objective
+  min_child_weight: 1         # Minimum sum of instance weight in child
+  gamma: 0                    # Minimum loss reduction for split
+  reg_alpha: 0                # L1 regularization term
+  reg_lambda: 1               # L2 regularization term
+
+# LightGBM - Fast Gradient Boosting Model
+lightgbm:
+  n_estimators: 100           # Number of boosting iterations
+  max_depth: 6                # Maximum tree depth
+  learning_rate: 0.1          # Boosting learning rate
+  num_leaves: 31              # Maximum number of leaves
+  subsample: 0.8              # Subsample ratio of training data
+  colsample_bytree: 0.8       # Subsample ratio of columns
+  random_state: 42            # Random seed for reproducibility
+  class_weight: balanced      # Handle class imbalance
+  n_jobs: -1                  # Use all CPU cores
+  boosting_type: gbdt         # Gradient Boosting Decision Tree
+  objective: binary           # Binary classification
+  min_child_samples: 20       # Minimum data in one leaf
+  reg_alpha: 0.0              # L1 regularization
+  reg_lambda: 0.0             # L2 regularization
+  importance_type: split      # Feature importance type

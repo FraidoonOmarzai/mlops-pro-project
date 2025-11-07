@@ -15,7 +15,6 @@ dirs = [
     "mlruns",
     "artifacts",
     os.path.join("artifacts", "models"),
-    os.path.join("artifacts", "prepocessors"),
     os.path.join("artifacts", "metrics"),
     "tests",
     os.path.join("tests", "unit"),
