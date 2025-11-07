@@ -36,13 +36,13 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
 
 
 @ensure_annotations
-def save_json(path: Path, data: dict):
-    """save json data
-
-    Args:
-        path (Path): path to json file
-        data (dict): data to be saved in json file
+def save_json(path: str, data: dict):
     """
+    Save a dictionary as a JSON file.
+    """
+    # ensure directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
     with open(path, "w") as f:
         json.dump(data, f, indent=4)
 
