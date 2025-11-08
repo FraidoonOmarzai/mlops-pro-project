@@ -1,0 +1,15 @@
+artifact_uri: file:///c:/Users/44787/Desktop/mlops-pro-project/mlruns/823262042616604483/39cefb91c6a948b795792b2686bd5b35/artifacts
+end_time: 1762627988452
+entry_point_name: ''
+experiment_id: '823262042616604483'
+lifecycle_stage: active
+run_id: 39cefb91c6a948b795792b2686bd5b35
+run_name: logistic_regression_run
+run_uuid: 39cefb91c6a948b795792b2686bd5b35
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762627974851
+status: 3
+tags: []
+user_id: '44787'
