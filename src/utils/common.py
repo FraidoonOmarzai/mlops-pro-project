@@ -1,7 +1,9 @@
 import os
+import sys
 from box.exceptions import BoxValueError
 import yaml
 from src.logger import logger
+from src.exception import CustomException
 from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
@@ -66,3 +68,20 @@ def save_object(file_path: str, obj):
     # Save object
     with open(file_path, 'wb') as file_obj:
         pickle.dump(obj, file_obj)
+
+@ensure_annotations
+def load_object(file_path: str):
+    """
+    Load a Python object from a pickle file.
+
+    Args:
+        file_path (str): Path to the .pkl file
+
+    Returns:
+        Any: The loaded Python object
+    """
+    try:
+        with open(file_path, "rb") as f:
+            return pickle.load(f)
+    except Exception as e:
+        raise CustomException(e, sys)
