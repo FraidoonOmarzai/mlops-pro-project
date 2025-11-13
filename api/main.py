@@ -1,111 +1,107 @@
 """
-FastAPI Application for Churn Prediction
-Main entry point for the API server.
+api/main.py
+Simplified FastAPI app for Customer Churn Prediction.
 """
 
-import sys
+from typing import Any, Dict, List, Optional
 import os
+import sys
+import time
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import time
 
-# Add project root to path
+# ensure project root is importable (keep if you need local imports)
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import your pydantic schemas and pipeline
 from api.schemas import (
     PredictionRequest, PredictionResponse,
     BatchPredictionRequest, BatchPredictionResponse,
-    HealthResponse, ErrorResponse, ModelInfo
+    HealthResponse, ModelInfo,
 )
 from src.pipeline.prediction_pipeline import PredictionPipeline
 from src.logger import logger
 from src.exception import CustomException
 
+# ---------- Global state ----------
+prediction_pipeline: Optional[PredictionPipeline] = None
+API_VERSION = "1.0.0"
 
-# Global prediction pipeline instance
-prediction_pipeline = None
 
-
+# ---------- Lifespan (startup / shutdown) ----------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup and shutdown events.
-    Loads the model on startup and cleans up on shutdown.
-    """
+    """Load the prediction pipeline on startup and clean up on shutdown."""
     global prediction_pipeline
-    
-    # Startup
-    logger.info("Starting API server...")
+    logger.info("API starting up...")
     try:
-        # Load prediction pipeline
         prediction_pipeline = PredictionPipeline()
-        logger.info("Prediction pipeline loaded successfully")
-    except Exception as e:
-        logger.error(f"Failed to load prediction pipeline: {str(e)}")
+        logger.info("Prediction pipeline loaded")
+    except Exception as exc:
+        logger.exception("Failed to initialize prediction pipeline")
+        # Re-raise so FastAPI fails to start (visible in logs)
         raise
-    
+
     yield
-    
-    # Shutdown
-    logger.info("Shutting down API server...")
+
+    logger.info("API shutting down...")
 
 
-# Create FastAPI app
+# ---------- App creation ----------
 app = FastAPI(
     title="Customer Churn Prediction API",
-    description="REST API for predicting customer churn using machine learning",
-    version="1.0.0",
+    version=API_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
-
-# CORS middleware
+# Allow CORS for development (lock down in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Request timing middleware
+# ---------- Middleware: processing time ----------
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    """Add processing time to response headers."""
-    start_time = time.time()
+    start = time.time()
     response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(round(process_time, 4))
+    response.headers["X-Process-Time"] = f"{time.time() - start:.4f}"
     return response
 
 
-# Exception handler
+# ---------- Global exception handler ----------
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler."""
-    logger.error(f"Unhandled exception: {str(exc)}")
+    logger.exception("Unhandled exception")
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "Internal Server Error",
-            "detail": str(exc),
-            "status_code": 500
-        }
+        content={"error": "Internal Server Error", "detail": str(exc)},
     )
 
 
-# Root endpoint
+# ---------- Helpers ----------
+def ensure_pipeline_loaded():
+    """Raise HTTPException(503) if the pipeline is not ready."""
+    if prediction_pipeline is None or getattr(prediction_pipeline, "model", None) is None:
+        logger.warning("Request received but model not loaded")
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+
+# ---------- Routes ----------
 @app.get("/", tags=["Root"])
-async def root():
-    """Root endpoint with API information."""
+async def root() -> Dict[str, Any]:
     return {
         "message": "Customer Churn Prediction API",
-        "version": "1.0.0",
+        "version": API_VERSION,
         "status": "active",
         "endpoints": {
             "health": "/health",
@@ -113,204 +109,114 @@ async def root():
             "batch_predict": "/predict/batch",
             "model_info": "/model/info",
             "docs": "/docs",
-            "redoc": "/redoc"
-        }
+        },
     }
 
 
-# Health check endpoint
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
-async def health_check():
-    """
-    Health check endpoint.
-    Returns the status of the API and loaded models.
-    """
+async def health_check() -> HealthResponse:
     try:
-        model_loaded = prediction_pipeline is not None and prediction_pipeline.model is not None
-        preprocessor_loaded = prediction_pipeline is not None and prediction_pipeline.preprocessor is not None
-        
+        model_loaded = prediction_pipeline is not None and getattr(prediction_pipeline, "model", None) is not None
+        preprocessor_loaded = prediction_pipeline is not None and getattr(prediction_pipeline, "preprocessor", None) is not None
+
         return HealthResponse(
-            status="healthy" if (model_loaded and preprocessor_loaded) else "unhealthy",
+            status="healthy" if model_loaded and preprocessor_loaded else "unhealthy",
             model_loaded=model_loaded,
             preprocessor_loaded=preprocessor_loaded,
-            api_version="1.0.0",
-            model_path=prediction_pipeline.model_path if prediction_pipeline else None
+            api_version=API_VERSION,
+            model_path=getattr(prediction_pipeline, "model_path", None),
         )
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
+    except Exception as exc:
+        logger.exception("Health check failed")
         raise HTTPException(status_code=503, detail="Service unavailable")
 
 
-# Single prediction endpoint
 @app.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
-async def predict(request: PredictionRequest):
+async def predict(request: PredictionRequest) -> PredictionResponse:
     """
-    Make a churn prediction for a single customer.
-    
-    Args:
-        request: Customer features
-        
-    Returns:
-        Prediction result with probability and risk level
+    Single customer prediction.
     """
+    ensure_pipeline_loaded()
+
     try:
-        logger.info("Received prediction request")
-        
-        if prediction_pipeline is None:
-            raise HTTPException(status_code=503, detail="Model not loaded")
-        
-        # Convert Pydantic model to dict
-        customer_data = request.customer.dict()
-        
-        # Make prediction
-        result = prediction_pipeline.predict(customer_data)
-        
-        logger.info(f"Prediction completed: {result['prediction']}")
+        customer = request.customer.dict()
+        result = prediction_pipeline.predict(customer)
         return PredictionResponse(**result)
-        
     except CustomException as e:
-        logger.error(f"Prediction error: {str(e)}")
+        logger.error("Prediction error: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exc:
+        logger.exception("Unexpected prediction error")
+        raise HTTPException(status_code=500, detail="Prediction failed")
 
 
-# Batch prediction endpoint
 @app.post("/predict/batch", response_model=BatchPredictionResponse, tags=["Prediction"])
-async def predict_batch(request: BatchPredictionRequest):
+async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
     """
-    Make churn predictions for multiple customers.
-    
-    Args:
-        request: List of customer features (max 100)
-        
-    Returns:
-        List of prediction results
+    Batch predictions (list of customers).
     """
+    ensure_pipeline_loaded()
+
     try:
-        logger.info(f"Received batch prediction request for {len(request.customers)} customers")
-        
-        if prediction_pipeline is None:
-            raise HTTPException(status_code=503, detail="Model not loaded")
-        
-        # Convert Pydantic models to dicts
-        customers_data = [customer.dict() for customer in request.customers]
-        
-        # Make predictions
-        results = prediction_pipeline.predict_batch(customers_data)
-        
-        # Filter out errors
-        successful_predictions = [r for r in results if 'error' not in r]
-        
-        # Count high-risk customers
-        high_risk_count = sum(
-            1 for r in successful_predictions 
-            if r.get('risk_level') in ['High', 'Critical']
-        )
-        
-        logger.info(f"Batch prediction completed: {len(successful_predictions)} successful")
-        
+        customers = [c.dict() for c in request.customers]
+        results = prediction_pipeline.predict_batch(customers)
+
+        # keep successful predictions (no 'error' key)
+        successful = [r for r in results if "error" not in r]
+
+        high_risk_count = sum(1 for r in successful if r.get("risk_level") in {"High", "Critical"})
+
         return BatchPredictionResponse(
-            predictions=[PredictionResponse(**r) for r in successful_predictions],
-            total_customers=len(successful_predictions),
-            high_risk_count=high_risk_count
+            predictions=[PredictionResponse(**r) for r in successful],
+            total_customers=len(successful),
+            high_risk_count=high_risk_count,
         )
-        
     except CustomException as e:
-        logger.error(f"Batch prediction error: {str(e)}")
+        logger.error("Batch prediction error: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Unexpected batch prediction error")
+        raise HTTPException(status_code=500, detail="Batch prediction failed")
 
 
-# Model info endpoint
 @app.get("/model/info", response_model=ModelInfo, tags=["Model"])
-async def get_model_info():
-    """
-    Get information about the loaded model.
-    
-    Returns:
-        Model information including name, path, and type
-    """
-    try:
-        if prediction_pipeline is None or prediction_pipeline.model is None:
-            raise HTTPException(status_code=503, detail="Model not loaded")
-        
-        model_type = type(prediction_pipeline.model).__name__
-        
-        return ModelInfo(
-            model_name=model_type,
-            model_path=prediction_pipeline.model_path,
-            model_type=model_type,
-            training_date=None  # Could be extracted from model metadata
-        )
-        
-    except Exception as e:
-        logger.error(f"Error getting model info: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+async def get_model_info() -> ModelInfo:
+    ensure_pipeline_loaded()
+
+    model_obj = prediction_pipeline.model
+    model_type = type(model_obj).__name__
+
+    return ModelInfo(
+        model_name=model_type,
+        model_path=getattr(prediction_pipeline, "model_path", None),
+        model_type=model_type,
+        training_date=None,
+    )
 
 
-# Feature importance endpoint
 @app.get("/model/feature-importance", tags=["Model"])
-async def get_feature_importance():
-    """
-    Get feature importance from the model.
-    
-    Returns:
-        Dictionary of feature names and their importance scores
-    """
-    try:
-        if prediction_pipeline is None:
-            raise HTTPException(status_code=503, detail="Model not loaded")
-        
-        importance = prediction_pipeline.get_feature_importance()
-        
-        if not importance:
-            return {
-                "message": "Feature importance not available for this model type",
-                "feature_importance": {}
-            }
-        
-        # Return top 20 features
-        top_features = dict(list(importance.items())[:20])
-        
-        return {
-            "feature_importance": top_features,
-            "total_features": len(importance)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting feature importance: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+async def get_feature_importance() -> Dict[str, Any]:
+    ensure_pipeline_loaded()
+    importance = prediction_pipeline.get_feature_importance() or {}
+
+    # return top 20 features
+    top = dict(list(importance.items())[:20])
+    return {"feature_importance": top, "total_features": len(importance)}
 
 
-# Statistics endpoint
 @app.get("/stats", tags=["Statistics"])
-async def get_statistics():
-    """
-    Get API usage statistics.
-    
-    Returns:
-        Statistics about API usage
-    """
+async def get_statistics() -> Dict[str, Any]:
+    # placeholder — implement real tracking if desired
     return {
-        "message": "Statistics endpoint - To be implemented with request tracking",
+        "message": "Statistics endpoint - To be implemented",
         "total_predictions": 0,
         "average_response_time": 0,
-        "high_risk_percentage": 0
+        "high_risk_percentage": 0,
     }
 
 
+# ---------- Uvicorn entry (for local dev) ----------
 if __name__ == "__main__":
     import uvicorn
-    
-    # Run the server
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

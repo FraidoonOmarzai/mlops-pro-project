@@ -2,7 +2,7 @@
 Pydantic Schemas for API Request/Response Validation
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from typing import List, Optional, Literal
 from enum import Enum
 
@@ -81,11 +81,14 @@ class CustomerFeatures(BaseModel):
     MonthlyCharges: float = Field(..., ge=0, le=200, description="Monthly charges in dollars")
     TotalCharges: float = Field(..., ge=0, description="Total charges in dollars")
     
-    @validator('TotalCharges')
-    def validate_total_charges(cls, v, values):
+    @field_validator('TotalCharges', mode='after')
+    def validate_total_charges(cls, v, info: ValidationInfo):
         """Ensure TotalCharges is reasonable given tenure and MonthlyCharges"""
-        if 'tenure' in values and 'MonthlyCharges' in values:
-            if v > 0 and v < values['MonthlyCharges'] * 0.5:
+        other = info.data or {}
+        if 'tenure' in other and 'MonthlyCharges' in other:
+            tenure = other['tenure']
+            monthly = other['MonthlyCharges']
+            if v is not None and v > 0 and v < monthly * 0.5:
                 raise ValueError("TotalCharges seems too low for the given tenure and MonthlyCharges")
         return v
     
@@ -210,6 +213,6 @@ class ModelInfo(BaseModel):
                 "model_name": "XGBoost Classifier",
                 "model_path": "artifacts/models/xgboost.pkl",
                 "model_type": "XGBClassifier",
-                "training_date": "2024-11-04"
+                "training_date": "2025-11-12"
             }
         }

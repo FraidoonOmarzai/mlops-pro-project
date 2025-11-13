@@ -1,0 +1,20 @@
+======================================================================
+TRAINING SUMMARY
+======================================================================
+
+Start Time: 2025-11-13 16:38:52.066950
+End Time: 2025-11-13 16:39:40.893689
+Duration: 48.83 seconds
+
+Best Model: random_forest
+
+Models Trained:
+  - logistic_regression
+  - random_forest
+  - xgboost
+  - lightgbm
+
+Artifacts:
+  - Preprocessor: artifacts/preprocessors/preprocessor.pkl
+  - Models: artifacts/models/
+  - Metrics: artifacts/metrics/

@@ -1,0 +1,43 @@
+# Dockerfile for Training Pipeline
+# Use this to train models in a containerized environment
+
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy setup files 
+COPY setup.py ./
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY src/ ./src/
+COPY configs/ ./configs/
+COPY scripts/ ./scripts/
+COPY data/ ./data/
+
+# Create necessary directories
+RUN mkdir -p logs artifacts/models artifacts/preprocessors artifacts/metrics mlruns
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Volume for artifacts
+VOLUME ["/app/artifacts", "/app/mlruns", "/app/logs"]
+
+# Default command
+CMD ["python", "scripts/train.py"]
