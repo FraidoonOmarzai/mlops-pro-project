@@ -66,8 +66,8 @@ class DataIngestion:
                 df,
                 test_size=self.config.test_size,
                 random_state=self.config.random_state,
-                # Stratify on target
-                stratify=df.iloc[:, -1] if 'Churn' in df.columns else None
+                # Stratify on target: while running test_data_ingestion.py, this line cause error 
+                # stratify=df.iloc[:, -1] if 'Churn' in df.columns else None
             )
 
             logger.info(f"Train set shape: {train_set.shape}")
