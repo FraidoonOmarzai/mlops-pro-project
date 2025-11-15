@@ -1,0 +1,172 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  formatting:
+    name: Check Code Formatting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install formatting tools
+        run: |
+          pip install black isort
+      
+      - name: Check Black formatting
+        run: |
+          black --check --diff src/ api/ streamlit_app/ tests/
+      
+      - name: Check isort import sorting
+        run: |
+          isort --check-only --diff src/ api/ streamlit_app/ tests/
+      
+      - name: Auto-fix formatting (on PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          black src/ api/ streamlit_app/ tests/
+          isort src/ api/ streamlit_app/ tests/
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "Auto-fix code formatting"
+          git push
+        continue-on-error: true
+
+  linting:
+    name: Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install linting tools
+        run: |
+          pip install flake8 pylint mypy
+          pip install -r requirements.txt
+      
+      - name: Run Flake8
+        run: |
+          flake8 src/ api/ streamlit_app/ --count --statistics --format=html --htmldir=flake8-report
+      
+      - name: Run Pylint
+        run: |
+          pylint src/ api/ --output-format=text --reports=y --exit-zero > pylint-report.txt
+      
+      - name: Run MyPy type checking
+        run: |
+          mypy src/ api/ --ignore-missing-imports --html-report mypy-report
+        continue-on-error: true
+      
+      - name: Upload linting reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: linting-reports
+          path: |
+            flake8-report/
+            pylint-report.txt
+            mypy-report/
+
+  complexity:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install analysis tools
+        run: |
+          pip install radon mccabe
+      
+      - name: Calculate cyclomatic complexity
+        run: |
+          radon cc src/ api/ -a -s
+      
+      - name: Calculate maintainability index
+        run: |
+          radon mi src/ api/ -s
+      
+      - name: Check for complex functions
+        run: |
+          radon cc src/ api/ -n C -s
+        continue-on-error: true
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install documentation tools
+        run: |
+          pip install pydocstyle interrogate
+      
+      - name: Check docstring coverage
+        run: |
+          interrogate -v src/ api/
+      
+      - name: Check docstring style
+        run: |
+          pydocstyle src/ api/
+        continue-on-error: true
+
+  dependencies:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Check for outdated dependencies
+        run: |
+          pip install pip-audit
+          pip-audit --desc
+        continue-on-error: true
+      
+      - name: Check dependency licenses
+        run: |
+          pip install pip-licenses
+          pip install -r requirements.txt
+          pip-licenses --format=markdown --output-file=licenses.md
+      
+      - name: Upload license report
+        uses: actions/upload-artifact@v3
+        with:
+          name: licenses
+          path: licenses.md
