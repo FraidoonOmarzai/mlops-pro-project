@@ -376,6 +376,13 @@ mlflow ui --port 5001
 
 This project is for educational purposes.
 
+
+
+
+![CI](https://github.com/FraidoonOmarzai/mlops-pro-project/workflows/CI%20Pipeline/badge.svg)
+
+![Docker](https://github.com/FraidoonOmarzai/mlops-pro-project/workflows/Docker%20Build%20and%20Push/badge.svg)
+
 ## 👥 Authors
 
 Fraidoon Omarzai - MLOps Engineer
