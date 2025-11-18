@@ -3,11 +3,26 @@ api/main.py
 Simplified FastAPI app for Customer Churn Prediction.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import os
 import sys
 import time
 from contextlib import asynccontextmanager
+
+# Import your pydantic schemas and pipeline
+from api.schemas import (
+    PredictionRequest,
+    PredictionResponse,
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    HealthResponse,
+    ModelInfo,
+)
+
+from src.pipeline.prediction_pipeline import PredictionPipeline
+from src.logger import logger
+from src.exception import CustomException
+
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,15 +31,6 @@ from fastapi.responses import JSONResponse
 # ensure project root is importable (keep if you need local imports)
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import your pydantic schemas and pipeline
-from api.schemas import (
-    PredictionRequest, PredictionResponse,
-    BatchPredictionRequest, BatchPredictionResponse,
-    HealthResponse, ModelInfo,
-)
-from src.pipeline.prediction_pipeline import PredictionPipeline
-from src.logger import logger
-from src.exception import CustomException
 
 # ---------- Global state ----------
 prediction_pipeline: Optional[PredictionPipeline] = None
@@ -40,10 +46,10 @@ async def lifespan(app: FastAPI):
     try:
         prediction_pipeline = PredictionPipeline()
         logger.info("Prediction pipeline loaded")
-    except Exception as exc:
+    except Exception as e:
         logger.exception("Failed to initialize prediction pipeline")
         # Re-raise so FastAPI fails to start (visible in logs)
-        raise
+        raise CustomException(e, sys)
 
     yield
 
@@ -117,7 +123,9 @@ async def root() -> Dict[str, Any]:
 async def health_check() -> HealthResponse:
     try:
         model_loaded = prediction_pipeline is not None and getattr(prediction_pipeline, "model", None) is not None
-        preprocessor_loaded = prediction_pipeline is not None and getattr(prediction_pipeline, "preprocessor", None) is not None
+        preprocessor_loaded = (
+            prediction_pipeline is not None and getattr(prediction_pipeline, "preprocessor", None) is not None
+        )
 
         return HealthResponse(
             status="healthy" if model_loaded and preprocessor_loaded else "unhealthy",
@@ -126,8 +134,8 @@ async def health_check() -> HealthResponse:
             api_version=API_VERSION,
             model_path=getattr(prediction_pipeline, "model_path", None),
         )
-    except Exception as exc:
-        logger.exception("Health check failed")
+    except Exception as e:
+        logger.exception(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service unavailable")
 
 
@@ -145,8 +153,8 @@ async def predict(request: PredictionRequest) -> PredictionResponse:
     except CustomException as e:
         logger.error("Prediction error: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as exc:
-        logger.exception("Unexpected prediction error")
+    except Exception as e:
+        logger.exception(f"Unexpected prediction error: {e}")
         raise HTTPException(status_code=500, detail="Prediction failed")
 
 

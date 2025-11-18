@@ -173,13 +173,13 @@ After running `python scripts/train.py`, you should see:
    ├── metrics/
    │   └── evaluation_report.json
    └── validation_report.json
-   
+
    mlruns/
    └── 0/  # Experiment runs
-   
+
    logs/
    └── 2024_11_04_*.log
-   
+
    data/
    ├── raw/
    │   └── churn_data.csv

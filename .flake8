@@ -15,12 +15,12 @@ exclude =
     .mypy_cache
 
 # Ignore specific errors
-extend-ignore = 
-    E203,  # Whitespace before ':'
-    E266,  # Too many leading '#' for block comment
-    E501,  # Line too long (handled by black)
-    W503,  # Line break before binary operator
-    W504,  # Line break after binary operator
+extend-ignore =
+    E203
+    E266
+    E501
+    W503
+    W504
 
 # Complexity
 max-complexity = 10

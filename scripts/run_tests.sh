@@ -23,7 +23,7 @@ echo ""
 run_tests() {
     local marker=$1
     local description=$2
-    
+
     echo -e "${YELLOW}Running ${description}...${NC}"
     pytest -m "$marker" -v
     echo ""
@@ -35,32 +35,32 @@ case $TEST_TYPE in
         echo "Running all tests..."
         pytest -v --cov=src --cov=api --cov-report=html --cov-report=term
         ;;
-    
+
     unit)
         run_tests "unit" "Unit Tests"
         ;;
-    
+
     integration)
         run_tests "integration" "Integration Tests"
         ;;
-    
+
     data)
         run_tests "data" "Data Quality Tests"
         ;;
-    
+
     model)
         run_tests "model" "Model Performance Tests"
         ;;
-    
+
     api)
         run_tests "api" "API Tests"
         ;;
-    
+
     fast)
         echo "Running fast tests (excluding slow tests)..."
         pytest -v -m "not slow"
         ;;
-    
+
     coverage)
         echo "Running tests with coverage report..."
         pytest -v --cov=src --cov=api \
@@ -72,7 +72,7 @@ case $TEST_TYPE in
         echo "  - HTML: htmlcov/index.html"
         echo "  - XML: coverage.xml"
         ;;
-    
+
     ci)
         echo "Running CI tests..."
         pytest -v --cov=src --cov=api \
@@ -80,7 +80,7 @@ case $TEST_TYPE in
                --cov-fail-under=70 \
                -m "not slow and not skip_docker"
         ;;
-    
+
     clean)
         echo "Cleaning test artifacts..."
         rm -rf .pytest_cache
@@ -90,7 +90,7 @@ case $TEST_TYPE in
         find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
         echo -e "${GREEN}Test artifacts cleaned${NC}"
         ;;
-    
+
     *)
         echo -e "${RED}Invalid test type: $TEST_TYPE${NC}"
         echo ""

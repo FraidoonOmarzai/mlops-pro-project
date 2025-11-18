@@ -1,4 +1,3 @@
-
 import os
 import logging
 from datetime import datetime
@@ -15,10 +14,7 @@ LOG_FILE_PATH = os.path.join(LOG_DIR, LOG_FILE)
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s - %(name)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE_PATH),
-        logging.StreamHandler()  # Also print to console
-    ]
+    handlers=[logging.FileHandler(LOG_FILE_PATH), logging.StreamHandler()],  # Also print to console
 )
 
 # Create logger
@@ -28,10 +24,10 @@ logger = logging.getLogger("ChurnPrediction")
 def get_logger(name: str = "ChurnPrediction") -> logging.Logger:
     """
     Get a logger instance with the specified name.
-    
+
     Args:
         name: Name of the logger
-        
+
     Returns:
         Logger instance
     """

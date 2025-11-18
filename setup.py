@@ -12,5 +12,5 @@ setuptools.setup(
     version=__version__,
     author=AUTHOR_USER_NAME,
     description="Implementation of end-to-end MLOps Project",
-    packages=setuptools.find_packages()
+    packages=setuptools.find_packages(),
 )

@@ -19,9 +19,9 @@ start_services() {
     echo -e "${GREEN}======================================${NC}"
     echo -e "${GREEN}Starting Churn Prediction Services${NC}"
     echo -e "${GREEN}======================================${NC}"
-    
+
     docker-compose up -d
-    
+
     echo ""
     echo -e "${GREEN}Services started successfully!${NC}"
     echo ""

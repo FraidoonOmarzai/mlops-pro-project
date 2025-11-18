@@ -7,7 +7,6 @@ from src.exception import CustomException
 from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
-from typing import Any
 import json
 import pickle
 
@@ -66,8 +65,9 @@ def save_object(file_path: str, obj):
         os.makedirs(dir_path, exist_ok=True)
 
     # Save object
-    with open(file_path, 'wb') as file_obj:
+    with open(file_path, "wb") as file_obj:
         pickle.dump(obj, file_obj)
+
 
 @ensure_annotations
 def load_object(file_path: str):

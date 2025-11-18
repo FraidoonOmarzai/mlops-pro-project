@@ -11,13 +11,13 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from src.logger import logger
 from src.exception import CustomException
-from src.utils.common import save_object, read_yaml
-from src.constants import CONFIG_PATH, MODEL_CONFIG_PATH
+from src.utils.common import save_object
 
 
 @dataclass
 class ModelTrainerConfig:
     """Configuration for model trainer component."""
+
     models_dir: str
     models: list
     mlflow_tracking_uri: str
@@ -60,42 +60,26 @@ class ModelTrainer:
         try:
             models = {}
 
-            if 'logistic_regression' in self.config.models:
-                models['logistic_regression'] = LogisticRegression(
-                    **self.model_params.get('logistic_regression', {})
-                )
+            if "logistic_regression" in self.config.models:
+                models["logistic_regression"] = LogisticRegression(**self.model_params.get("logistic_regression", {}))
 
-            if 'random_forest' in self.config.models:
-                models['random_forest'] = RandomForestClassifier(
-                    **self.model_params.get('random_forest', {})
-                )
+            if "random_forest" in self.config.models:
+                models["random_forest"] = RandomForestClassifier(**self.model_params.get("random_forest", {}))
 
-            if 'xgboost' in self.config.models:
-                models['xgboost'] = XGBClassifier(
-                    **self.model_params.get('xgboost', {})
-                )
+            if "xgboost" in self.config.models:
+                models["xgboost"] = XGBClassifier(**self.model_params.get("xgboost", {}))
 
-            if 'lightgbm' in self.config.models:
-                models['lightgbm'] = LGBMClassifier(
-                    **self.model_params.get('lightgbm', {}),
-                    verbose=-1
-                )
+            if "lightgbm" in self.config.models:
+                models["lightgbm"] = LGBMClassifier(**self.model_params.get("lightgbm", {}), verbose=-1)
 
-            logger.info(
-                f"Initialized {len(models)} models: {list(models.keys())}")
+            logger.info(f"Initialized {len(models)} models: {list(models.keys())}")
             return models
 
         except Exception as e:
             raise CustomException(e, sys)
 
     def train_model(
-        self,
-        model_name: str,
-        model: Any,
-        X_train: np.ndarray,
-        y_train: np.ndarray,
-        X_test: np.ndarray,
-        y_test: np.ndarray
+        self, model_name: str, model: Any, X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray
     ) -> Tuple[Any, str]:
         """
         Train a single model and log to MLflow.
@@ -116,6 +100,7 @@ class ModelTrainer:
 
             with mlflow.start_run(run_name=f"{model_name}_run") as run:
                 # Log model parameters
+                print(run.info.run_id)
                 mlflow.log_params(self.model_params.get(model_name, {}))
 
                 # Train model
@@ -127,9 +112,10 @@ class ModelTrainer:
                 y_test_pred = model.predict(X_test)
 
                 # Get prediction probabilities
-                if hasattr(model, 'predict_proba'):
+                if hasattr(model, "predict_proba"):
                     y_train_pred_proba = model.predict_proba(X_train)[:, 1]
                     y_test_pred_proba = model.predict_proba(X_test)[:, 1]
+                    print(y_test_pred_proba, y_train_pred_proba)
                 else:
                     y_train_pred_proba = None
                     y_test_pred_proba = None
@@ -139,11 +125,9 @@ class ModelTrainer:
 
                 train_accuracy = accuracy_score(y_train, y_train_pred)
                 test_accuracy = accuracy_score(y_test, y_test_pred)
-                test_precision = precision_score(
-                    y_test, y_test_pred, average='binary')
-                test_recall = recall_score(
-                    y_test, y_test_pred, average='binary')
-                test_f1 = f1_score(y_test, y_test_pred, average='binary')
+                test_precision = precision_score(y_test, y_test_pred, average="binary")
+                test_recall = recall_score(y_test, y_test_pred, average="binary")
+                test_f1 = f1_score(y_test, y_test_pred, average="binary")
 
                 # Log metrics
                 mlflow.log_metric("train_accuracy", train_accuracy)
@@ -152,15 +136,13 @@ class ModelTrainer:
                 mlflow.log_metric("test_recall", test_recall)
                 mlflow.log_metric("test_f1_score", test_f1)
 
-                logger.info(
-                    f"{model_name} - Test Accuracy: {test_accuracy:.4f}, F1: {test_f1:.4f}")
+                logger.info(f"{model_name} - Test Accuracy: {test_accuracy:.4f}, F1: {test_f1:.4f}")
 
                 # Log model to MLflow
                 mlflow.sklearn.log_model(model, f"{model_name}_model")
 
                 # Save model locally
-                model_path = os.path.join(
-                    self.config.models_dir, f"{model_name}.pkl")
+                model_path = os.path.join(self.config.models_dir, f"{model_name}.pkl")
                 save_object(model_path, model)
                 logger.info(f"{model_name} saved to: {model_path}")
 
@@ -174,11 +156,7 @@ class ModelTrainer:
             raise CustomException(e, sys)
 
     def initiate_model_training(
-        self,
-        X_train: np.ndarray,
-        X_test: np.ndarray,
-        y_train: np.ndarray,
-        y_test: np.ndarray
+        self, X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, y_test: np.ndarray
     ) -> Dict[str, Any]:
         """
         Train all configured models.
@@ -211,18 +189,10 @@ class ModelTrainer:
                 logger.info(f"{'='*50}")
 
                 trained_model, model_path = self.train_model(
-                    model_name=model_name,
-                    model=model,
-                    X_train=X_train,
-                    y_train=y_train,
-                    X_test=X_test,
-                    y_test=y_test
+                    model_name=model_name, model=model, X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test
                 )
 
-                results[model_name] = {
-                    'model': trained_model,
-                    'model_path': model_path
-                }
+                results[model_name] = {"model": trained_model, "model_path": model_path}
 
                 self.trained_models[model_name] = trained_model
 
@@ -252,5 +222,5 @@ def create_model_trainer_config(config_dict: dict, mlflow_config: dict) -> Model
         models_dir=config_dict.models_dir,
         models=config_dict.models,
         mlflow_tracking_uri=mlflow_config.tracking_uri,
-        mlflow_experiment_name=mlflow_config.experiment_name
+        mlflow_experiment_name=mlflow_config.experiment_name,
     )

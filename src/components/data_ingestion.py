@@ -6,13 +6,12 @@ from dataclasses import dataclass
 from src.logger import logger
 from src.exception import CustomException
 from pathlib import Path
-from src.constants import CONFIG_PATH
-from src.utils.common import read_yaml
 
 
 @dataclass
 class DataIngestionConfig:
     """Configuration for data ingestion component."""
+
     raw_data_path: Path
     train_data_path: Path
     test_data_path: Path
@@ -56,17 +55,15 @@ class DataIngestion:
             logger.info(f"Duplicates: {df.duplicated().sum()}")
 
             # Create directory for processed data
-            os.makedirs(os.path.dirname(
-                self.config.train_data_path), exist_ok=True)
+            os.makedirs(os.path.dirname(self.config.train_data_path), exist_ok=True)
 
             # Split the data
-            logger.info(
-                f"Splitting data with test_size={self.config.test_size}")
+            logger.info(f"Splitting data with test_size={self.config.test_size}")
             train_set, test_set = train_test_split(
                 df,
                 test_size=self.config.test_size,
                 random_state=self.config.random_state,
-                # Stratify on target: while running test_data_ingestion.py, this line cause error 
+                # Stratify on target: while running test_data_ingestion.py, this line cause error
                 # stratify=df.iloc[:, -1] if 'Churn' in df.columns else None
             )
 
@@ -74,19 +71,14 @@ class DataIngestion:
             logger.info(f"Test set shape: {test_set.shape}")
 
             # Save train and test sets
-            train_set.to_csv(self.config.train_data_path,
-                             index=False, header=True)
-            test_set.to_csv(self.config.test_data_path,
-                            index=False, header=True)
+            train_set.to_csv(self.config.train_data_path, index=False, header=True)
+            test_set.to_csv(self.config.test_data_path, index=False, header=True)
 
             logger.info("Data ingestion completed successfully")
             logger.info(f"Train data saved to: {self.config.train_data_path}")
             logger.info(f"Test data saved to: {self.config.test_data_path}")
 
-            return (
-                self.config.train_data_path,
-                self.config.test_data_path
-            )
+            return (self.config.train_data_path, self.config.test_data_path)
 
         except Exception as e:
             logger.error("Error in data ingestion")
@@ -103,12 +95,12 @@ class DataIngestion:
             df = pd.read_csv(self.config.raw_data_path)
 
             info = {
-                'total_rows': len(df),
-                'total_columns': len(df.columns),
-                'columns': list(df.columns),
-                'missing_values': df.isnull().sum().to_dict(),
-                'duplicates': int(df.duplicated().sum()),
-                'dtypes': df.dtypes.astype(str).to_dict()
+                "total_rows": len(df),
+                "total_columns": len(df.columns),
+                "columns": list(df.columns),
+                "missing_values": df.isnull().sum().to_dict(),
+                "duplicates": int(df.duplicated().sum()),
+                "dtypes": df.dtypes.astype(str).to_dict(),
             }
 
             return info
@@ -132,4 +124,5 @@ def create_data_ingestion_config(config_dict: dict) -> DataIngestionConfig:
         train_data_path=config_dict.train_data_path,
         test_data_path=config_dict.test_data_path,
         test_size=config_dict.test_size,
-        random_state=config_dict.random_state)
+        random_state=config_dict.random_state,
+    )

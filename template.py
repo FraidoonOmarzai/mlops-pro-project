@@ -1,13 +1,13 @@
 import os
 import logging
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s]: %(message)s:')
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s]: %(message)s:")
 
 dirs = [
     "src",
     os.path.join("src", "components"),
     os.path.join("src", "utils"),
-    os.path.join("src", "pipeline"),  
+    os.path.join("src", "pipeline"),
     os.path.join("data", "raw"),
     os.path.join("data", "processed"),
     "notebook",
@@ -22,7 +22,6 @@ dirs = [
     os.path.join("tests", "data"),
     "logs",
     "scripts",
-    
 ]
 
 for dir_ in dirs:
@@ -38,7 +37,7 @@ files = [
     "setup.py",
     "app.py",
     "requirements.txt",
-    '.env',
+    ".env",
     os.path.join("notebook", "experiments.ipynb"),
     os.path.join("src", "__init__.py"),
     os.path.join("src", "pipeline", "__init__.py"),
