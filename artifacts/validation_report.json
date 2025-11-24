@@ -24,21 +24,21 @@
                 "tenure": {
                     "min": 0.0,
                     "max": 72.0,
-                    "mean": 32.48509052183174,
-                    "std": 24.56874351182127,
+                    "mean": 32.373091941782036,
+                    "std": 24.4245388300351,
                     "negative_values": 0
                 },
                 "MonthlyCharges": {
-                    "min": 18.4,
-                    "max": 118.75,
-                    "mean": 64.92996095136671,
-                    "std": 30.138105357938493,
+                    "min": 18.25,
+                    "max": 118.6,
+                    "mean": 64.86425275115373,
+                    "std": 30.089324178571733,
                     "negative_values": 0
                 }
             },
             "target_distribution": {
-                "No": 4139,
-                "Yes": 1495
+                "No": 4138,
+                "Yes": 1496
             },
             "target_balance_ratio": 0.36
         }
@@ -68,21 +68,21 @@
                 "tenure": {
                     "min": 0.0,
                     "max": 72.0,
-                    "mean": 31.91554293825408,
-                    "std": 24.525829230398582,
+                    "mean": 32.36337828246984,
+                    "std": 25.100620667570823,
                     "negative_values": 0
                 },
                 "MonthlyCharges": {
-                    "min": 18.25,
-                    "max": 116.8,
-                    "mean": 64.0888573456352,
-                    "std": 29.89829024000871,
+                    "min": 18.7,
+                    "max": 118.75,
+                    "mean": 64.35159687721789,
+                    "std": 30.100126990103067,
                     "negative_values": 0
                 }
             },
             "target_distribution": {
-                "No": 1035,
-                "Yes": 374
+                "No": 1036,
+                "Yes": 373
             },
             "target_balance_ratio": 0.36
         }

@@ -25,6 +25,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: '^(k8s/.*|k8s/temp/.*)$'
       - id: check-added-large-files
         args: ['--maxkb=1000']
       - id: check-json

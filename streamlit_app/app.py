@@ -4,8 +4,6 @@ Interactive dashboard for making predictions.
 """
 
 import streamlit as st
-import sys
-import os
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -15,8 +13,7 @@ from src.pipeline.prediction_pipeline import PredictionPipeline
 # from src.logger import logger
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Page configuration
 st.set_page_config(page_title="Churn Prediction Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
