@@ -60,35 +60,10 @@ Experiment: Random Forest, XGBoost, LightGBM
 Latency: < 200ms for predictions (REST API)
 Throughput: Handle 100 requests/second
 Availability: 99.5% uptime
+<!-- Done above -->
 
 
-📋 PROJECT STRUCTURE (High-Level)
-```
-mlops-churn-prediction/
-│
-├── data/                          # Data versioning (DVC optional)
-├── notebooks/                     # EDA & experiments
-├── src/
-│   ├── data_ingestion.py         # Data loading & validation
-│   ├── data_preprocessing.py     # Feature engineering
-│   ├── model_training.py         # Training pipeline
-│   ├── model_evaluation.py       # Metrics & validation
-│   └── prediction_service.py     # Inference API
-│
-├── tests/
-│   ├── unit_tests/               # Function-level tests
-│   ├── integration_tests/        # Pipeline tests
-│   ├── data_tests/               # Data quality tests
-│   └── model_tests/              # Model performance tests
-│
-├── api/                          # FastAPI REST endpoints
-├── streamlit_app/                # Streamlit UI
-├── mlflow/                       # Experiment tracking
-├── docker/                       # Dockerfiles
-├── k8s/                          # Kubernetes manifests
-├── .github/workflows/            # CI/CD pipelines
-└── config/                       # Configuration files
-```
+
 🧪 TESTING STRATEGY (ML-Specific)
 1. Data Tests
 

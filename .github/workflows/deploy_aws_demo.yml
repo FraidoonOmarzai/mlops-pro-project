@@ -1,0 +1,115 @@
+# name: CD to ECS Fargate
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# env:
+#   AWS_REGION: us-east-1
+#   ECR_REPOSITORY: churn-prediction
+#   ECS_SERVICE: churn-prediction-service
+#   ECS_CLUSTER: chrun-prediction-cluster
+#   ECS_TASK_DEFINITION: .github/workflows/task_defination.json
+#   CONTAINER_NAME: churn-prediction
+#   DOCKERHUB_IMAGE: fraidoonjan/churn-prediction-api
+
+# permissions:
+#   id-token: write
+#   contents: read
+
+# jobs:
+#   check-status:
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+#     steps:
+#       - name: CI passed on main branch
+#         run: echo "CI passed on main branch, proceeding to build and deploy."
+
+#   # -------------------------------
+#   # 1. Pull from Docker Hub & Push to ECR
+#   # -------------------------------
+#   build-and-push:
+#     name: Pull from Docker Hub & Push to ECR
+#     needs: [check-status]
+#     runs-on: ubuntu-latest
+#     outputs:
+#       image: ${{ steps.push-to-ecr.outputs.image }}
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v2
+
+#       - name: Pull from Docker Hub and Push to ECR
+#         id: push-to-ecr
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           IMAGE_TAG: ${{ github.event.workflow_run.head_sha || github.sha }}
+#         run: |
+#           IMAGE_URI=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+#           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+#           # Pull image from Docker Hub
+#           docker pull ${{ env.DOCKERHUB_IMAGE }}:latest
+
+#           # Tag the image for ECR
+#           docker tag ${{ env.DOCKERHUB_IMAGE }}:latest $IMAGE_URI
+
+#           # Push to ECR
+#           docker push $IMAGE_URI
+
+#           echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+#   # -------------------------------
+#   # 2. Deploy to ECS
+#   # -------------------------------
+#   deploy:
+#     name: Deploy to ECS Fargate
+#     needs: build-and-push
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Render Task Definition
+#         id: render-task
+#         uses: aws-actions/amazon-ecs-render-task-definition@v1
+#         with:
+#           task-definition: ${{ env.ECS_TASK_DEFINITION }}
+#           container-name: ${{ env.CONTAINER_NAME }}
+#           image: ${{ needs.build-and-push.outputs.image }}
+
+#       - name: Print Rendered Task
+#         run: cat ${{ steps.render-task.outputs.task-definition }}
+
+#       - name: Deploy to ECS
+#         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#         with:
+#           task-definition: ${{ steps.render-task.outputs.task-definition }}
+#           service: ${{ env.ECS_SERVICE }}
+#           cluster: ${{ env.ECS_CLUSTER }}
+#           wait-for-service-stability: true
+
+#       - name: Done!
+#         run: echo "Deployed to ECS Fargate Successfully"
